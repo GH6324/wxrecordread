@@ -8,7 +8,7 @@
 使用 [YukiHookAPI](https://github.com/fankes/YukiHookAPI)
 
 * 目前支持 仅测试8.0.23,8.0.25 版本
-* 请使用最新版[WxRecord](https://github.com/pwh-pwh/wxrecordread/releases/tag/v1.1) 已保证支持8.0.23,8.0.25 版本
+* 请使用最新版[WxRecord](https://github.com/pwh-pwh/wxrecordread/releases/tag/v1.1) 以保证支持8.0.23,8.0.25 版本
 
 * 暂时提高版本号范围以支持一些不容易改变的类
 
