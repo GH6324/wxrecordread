@@ -23,10 +23,10 @@ jobs:
         id: sign_app
         with:
           releaseDirectory: app/build/outputs/apk/release
-          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-          alias: ${{ secrets.ALIAS }}
-          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}
+          signingKeyBase64: bXlrZXlQYXNzd29yZA==
+          alias: myKeyAlias
+          keyStorePassword: myStorePassword
+          keyPassword: mykeyPassword
       - run: mv ${{steps.sign_app.outputs.signedReleaseFile}} LittleGooseOffice_$GITHUB_REF_NAME.apk
       - uses: ncipollo/release-action@v1
         with:
