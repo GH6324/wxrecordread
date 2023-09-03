@@ -5,5 +5,6 @@ data class RecordHookEt(
     var nicknameF:String,
     var l1:String,
     var ll1:String,
-    var wxIdF:String
+    var wxIdF:String,
+    var methodName:String
 )
