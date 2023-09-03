@@ -186,23 +186,23 @@ class HookEntry : IYukiHookXposedInit {
     }
 //ko4
     fun PackageParam.addRbtnOcli() {
-        findClass("com.tencent.mm.ui.widget.imageview.WeImageButton")
+        TextView::class.java
             .hook {
                 injectMember {
                     method {
-                        name = "setOnClickListener"
-                        superClass(true)
+                        name = "setText"
+//                        superClass(true)
                     }
                     afterHook {
                         instance<View>().apply {
                             loggerD("wxbtnHook","btn id ${id}")
-                            if (this.id==0x7f090ce3) {
+                            if (this.id==0x7f094fb5) {
                                 loggerD("wxbtnHook","success find btn")
-                                setOnLongClickListener {
+                                setOnClickListener {
                                     Toast.makeText(this.context,"修改消息",Toast.LENGTH_LONG).show()
                                     loggerD("wxbtnHook","success hook btn")
                                     changeMsgDialog(this.context)
-                                    return@setOnLongClickListener true
+                                    return@setOnClickListener
                                 }
                             }
                         }
