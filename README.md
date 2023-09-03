@@ -10,7 +10,7 @@
 * 目前支持 仅测试8.0.23,8.0.25 版本 v1.2版本仅支持微信8.0.40版本
 * (out)请使用最新版[WxRecord](https://github.com/pwh-pwh/wxrecordread/releases/tag/v1.1) 以保证支持8.0.23,8.0.25 版本
 *  v2.1发布支持8.40.0修改消息[WxRecord](https://github.com/pwh-pwh/wxrecordread/releases/tag/v2.1)
-
+* v2.2版本修改：修改信息入口改为点击聊天页面用户名，避免与其他模块冲突[WxRecord](https://github.com/pwh-pwh/wxrecordread/releases/tag/v2.2)
 * 暂时提高版本号范围以支持一些不容易改变的类
 
 ### 主要功能如下
