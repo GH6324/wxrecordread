@@ -254,17 +254,17 @@ class HookEntry : IYukiHookXposedInit {
                     paramCount = 1
                 }
                 beforeHook {
-                    /*val gson = Gson()
+                    val gson = Gson()
                     val toJson = gson.toJson(args(0).any())
-                    loggerI(tag = "[wx_lm]",msg = "q7 read json:$toJson")*/
+                    loggerI(tag = "[wx_lm]",msg = "q7 read json:$toJson")
                     args(0).any()!!.current {
                             val mMsg = field {
                                 name = "z"
                             }.string()
                         loggerI(tag = "[wx_lm]",msg = "z:$mMsg")
                         val totalM = field {
-                            name = "t"
-                        }.int()
+                            name = "u"
+                        }.long()
                         loggerI(tag = "[wx_lm]",msg = "totalM:$totalM")
                         val resultMsg = if (mMsg.contains("共"))  {
                             mMsg
