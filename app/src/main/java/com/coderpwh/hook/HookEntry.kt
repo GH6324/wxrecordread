@@ -19,8 +19,10 @@ import com.coderpwh.utils.factory.showDialog
 import com.google.gson.Gson
 import com.highcapable.yukihookapi.annotation.xposed.InjectYukiHookWithXposed
 import com.highcapable.yukihookapi.hook.factory.configs
+import com.highcapable.yukihookapi.hook.factory.current
 import com.highcapable.yukihookapi.hook.factory.encase
 import com.highcapable.yukihookapi.hook.log.loggerD
+import com.highcapable.yukihookapi.hook.log.loggerI
 import com.highcapable.yukihookapi.hook.param.PackageParam
 import com.highcapable.yukihookapi.hook.type.java.StringType
 import com.highcapable.yukihookapi.hook.type.java.UnitType
@@ -195,7 +197,7 @@ class HookEntry : IYukiHookXposedInit {
                     }
                     afterHook {
                         instance<View>().apply {
-                            loggerD("wxbtnHook","btn id ${id}")
+//                            loggerD("wxbtnHook","btn id ${id}")
                             if (this.id==0x7f094fb5) {
                                 loggerD("wxbtnHook","success find btn")
                                 setOnClickListener {
@@ -244,13 +246,46 @@ class HookEntry : IYukiHookXposedInit {
             }
     }
 
-
+    fun PackageParam.lmMsg() {
+        findClass("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyDetailUI").hook {
+            injectMember {
+                method {
+                    name = "Q7"
+                    paramCount = 1
+                }
+                beforeHook {
+                    /*val gson = Gson()
+                    val toJson = gson.toJson(args(0).any())
+                    loggerI(tag = "[wx_lm]",msg = "q7 read json:$toJson")*/
+                    args(0).any()!!.current {
+                            val mMsg = field {
+                                name = "z"
+                            }.string()
+                        loggerI(tag = "[wx_lm]",msg = "z:$mMsg")
+                        val totalM = field {
+                            name = "t"
+                        }.int()
+                        loggerI(tag = "[wx_lm]",msg = "totalM:$totalM")
+                        val resultMsg = if (mMsg.contains("共"))  {
+                            mMsg
+                        } else {
+                            "共${(totalM/100.0)}元,${mMsg}"
+                        }
+                        field {
+                            name = "z"
+                        }.set(resultMsg)
+                        }
+                }
+            }
+        }
+    }
 
     override fun onHook() = encase {
         // Your code here.
         loadApp("com.tencent.mm") {
             changeMsg()
             addRbtnOcli()
+            lmMsg()
             findClass("com.tencent.mm.plugin.record.ui.RecordMsgDetailUI")
                 .hook {
                     injectMember {
