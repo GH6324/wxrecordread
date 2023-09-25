@@ -45,6 +45,9 @@
         4.强行停止模块运行
         5.打开微信
 
+## Star History
+![Star History Chart](https://api.star-history.com/svg?repos=pwh-pwh/wxrecordread&type=Date)
+
 ## 注意
 
 * 模块仅供学习，请勿用于非法用途，如有其他疑问，请提issus
