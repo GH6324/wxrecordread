@@ -12,6 +12,7 @@
 *  v2.1发布支持8.40.0修改消息[WxRecord](https://github.com/pwh-pwh/wxrecordread/releases/tag/v2.1)
 * v2.2版本修改：修改信息入口改为点击聊天页面用户名，避免与其他模块冲突[WxRecord](https://github.com/pwh-pwh/wxrecordread/releases/tag/v2.2)
 * 暂时提高版本号范围以支持一些不容易改变的类
+* 版本支持请查看[点击](https://github.com/pwh-pwh/wxrecordread/releases)看说明
 
 ### 主要功能如下
 
