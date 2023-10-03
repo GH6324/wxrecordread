@@ -10,13 +10,17 @@ import android.os.Environment
 import android.text.SpannableString
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
-import androidx.core.view.marginLeft
+import android.widget.Button
+import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.TextView
+import android.widget.Toast
 import com.alibaba.fastjson.JSON
 import com.coderpwh.pojo.RecordHookEt
 import com.coderpwh.pojo.UserInfo
 import com.coderpwh.utils.factory.showDialog
 import com.google.gson.Gson
+import com.google.gson.JsonArray
 import com.highcapable.yukihookapi.annotation.xposed.InjectYukiHookWithXposed
 import com.highcapable.yukihookapi.hook.factory.configs
 import com.highcapable.yukihookapi.hook.factory.current
@@ -27,11 +31,13 @@ import com.highcapable.yukihookapi.hook.param.PackageParam
 import com.highcapable.yukihookapi.hook.type.java.StringType
 import com.highcapable.yukihookapi.hook.type.java.UnitType
 import com.highcapable.yukihookapi.hook.xposed.proxy.IYukiHookXposedInit
-import de.robv.android.xposed.XposedHelpers.*
+import de.robv.android.xposed.XposedHelpers.callMethod
+import de.robv.android.xposed.XposedHelpers.callStaticMethod
+import de.robv.android.xposed.XposedHelpers.findClass
 import java.io.File
 import java.io.InputStream
 
-@InjectYukiHookWithXposed(entryClassName = "HookEntryInit")
+@InjectYukiHookWithXposed(entryClassName = "HookEntryInit", modulePackageName = "com.coderpwh")
 class HookEntry : IYukiHookXposedInit {
 
     override fun onInit() = configs {
@@ -246,26 +252,32 @@ class HookEntry : IYukiHookXposedInit {
             }
     }
 
+    private fun parseJsonArrayToLList(ja: JsonArray):List<LuckyItem> {
+        return ja.map {
+                je ->
+            je.asJsonObject.let {
+                LuckyItem(it.get("d").asString,it.get("n").asString,it.get("f").asLong)
+            }
+        }.toList()
+    }
+
     fun PackageParam.lmMsg() {
         findClass("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyDetailUI").hook {
             injectMember {
                 method {
-                    name = "Q7"
+                    name = "W7"
                     paramCount = 1
                 }
                 beforeHook {
-                    val gson = Gson()
-                    val toJson = gson.toJson(args(0).any())
-                    loggerI(tag = "[wx_lm]",msg = "q7 read json:$toJson")
                     args(0).any()!!.current {
-                            val mMsg = field {
-                                name = "z"
-                            }.string()
-                        loggerI(tag = "[wx_lm]",msg = "z:$mMsg")
+                        val mMsg = field {
+                            name = "z"
+                        }.string()
+                        loggerI(msg = "z:$mMsg")
                         val totalM = field {
                             name = "u"
                         }.long()
-                        loggerI(tag = "[wx_lm]",msg = "totalM:$totalM")
+                        loggerI(msg = "totalM:$totalM")
                         val resultMsg = if (mMsg.contains("共"))  {
                             mMsg
                         } else {
@@ -274,11 +286,72 @@ class HookEntry : IYukiHookXposedInit {
                         field {
                             name = "z"
                         }.set(resultMsg)
+                    }
+                    val data = args(0).any()
+                    val gson = Gson()
+                    val toJson = gson.toJson(data)
+                    loggerI(msg = "toJson:$toJson")
+                    var jsonObj = gson.toJsonTree(data).asJsonObject
+                    jsonObj.apply {
+                        var v = get("n").asString
+                        if(LuckyMoneyHold.v.isEmpty() || !LuckyMoneyHold.v.equals(v)) {
+                            LuckyMoneyHold.v = v
+                            val asJsonArray = get("M").asJsonArray
+                            LuckyMoneyHold.luckyList = parseJsonArrayToLList(asJsonArray).toMutableList()
+                        } else {
+                            val asJsonArray = get("M").asJsonArray
+                            parseJsonArrayToLList(asJsonArray).forEach {
+                                if (!LuckyMoneyHold.luckyList.contains(it)) {
+                                    LuckyMoneyHold.luckyList.add(it)
+                                }
+                            }
                         }
+                    }
+                    instance.current {
+                        val ge3View = field {
+                            name = "j"
+                        }.cast<TextView>()
+                        ge3View!!.setOnClickListener {
+                            AlertDialog.Builder(it.context).setTitle("领取详情")
+                                .setItems(LuckyMoneyHold.luckyList.map { "${it.nickName}领取${it.money/100.0}元,wxid:${it.wxid}" }.toTypedArray()) {
+                                        d,index ->
+                                    val lItem = LuckyMoneyHold.luckyList.get(index)
+                                    val clipboardManager =
+                                        appContext!!.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                    clipboardManager.setPrimaryClip(
+                                        ClipData.newPlainText(
+                                            "wx_luck_info",
+                                            "nickName:${lItem.nickName}\nwxid:${lItem.wxid}"
+                                        )
+                                    )
+                                    Toast.makeText(it.context,"成功复制",Toast.LENGTH_LONG).show()
+                                }
+                                .setPositiveButton("复制") {
+                                        _,_ ->
+                                    val joinToString =
+                                        LuckyMoneyHold.luckyList.map { "${it.nickName}领取${it.money / 100.0}元,wxid:${it.wxid}" }
+                                            .joinToString("\n")
+                                    val clipboardManager =
+                                        appContext!!.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                    clipboardManager.setPrimaryClip(
+                                        ClipData.newPlainText(
+                                            "wx_luck_all",
+                                            joinToString
+                                        )
+                                    )
+                                }
+                                .setNegativeButton("取消") {
+                                        it,_ ->
+                                    it.cancel()
+                                }
+                                .show()
+                        }
+                    }
                 }
             }
         }
     }
+
 
     override fun onHook() = encase {
         // Your code here.
@@ -386,6 +459,13 @@ fun getApplicationVersionName(packageName: String): String {
         pm.getPackageInfo(packageName, 0).versionName
     }
 }
+
+object LuckyMoneyHold {
+    var v:String = ""
+    var luckyList:MutableList<LuckyItem> = mutableListOf()
+}
+
+data class LuckyItem(val nickName:String,val wxid:String,val money:Long)
 
 fun MutableMap<String,String>.load(ins:InputStream) {
     ins.bufferedReader().lines().forEach {

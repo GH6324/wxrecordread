@@ -7,20 +7,17 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.core.view.isVisible
-import com.highcapable.yukihookapi.YukiHookAPI
 import com.coderpwh.R
 import com.coderpwh.databinding.ActivityMainBinding
 import com.coderpwh.ui.activity.base.BaseActivity
+import com.highcapable.yukihookapi.YukiHookAPI
 import top.defaults.drawabletoolbox.BuildConfig
-import top.defaults.drawabletoolbox.BuildConfig.APPLICATION_ID
-import top.defaults.drawabletoolbox.BuildConfig.VERSION_NAME
-import java.net.URL
 
 class MainActivity : BaseActivity<ActivityMainBinding>() {
 
     override fun onCreate() {
         refreshModuleStatus()
-        binding.mainTextVersion.text = getString(R.string.module_version, BuildConfig.VERSION_NAME)
+        binding.mainTextVersion.text = getString(R.string.module_version, "3.3")
         binding.hideIconInLauncherSwitch.isChecked = isLauncherIconShowing.not()
         binding.hideIconInLauncherSwitch.setOnCheckedChangeListener { button, isChecked ->
             if (button.isPressed) hideOrShowLauncherIcon(isChecked)
@@ -46,7 +43,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
      */
     private fun hideOrShowLauncherIcon(isShow: Boolean) {
         packageManager?.setComponentEnabledSetting( //
-            ComponentName(packageName, "${BuildConfig.APPLICATION_ID}.Home"),
+            ComponentName(packageName, "com.coderpwh.Home"),
             if (isShow) PackageManager.COMPONENT_ENABLED_STATE_DISABLED else PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
             PackageManager.DONT_KILL_APP
         )
@@ -60,7 +57,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
      */
     private val isLauncherIconShowing
         get() = packageManager?.getComponentEnabledSetting(
-            ComponentName(packageName, "${BuildConfig.APPLICATION_ID}.Home")
+            ComponentName(packageName, "com.coderpwh.Home")
         ) != PackageManager.COMPONENT_ENABLED_STATE_DISABLED
 
     /**
