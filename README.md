@@ -12,6 +12,7 @@
 *  v2.1发布支持8.40.0修改消息[WxRecord](https://github.com/pwh-pwh/wxrecordread/releases/tag/v2.1)
 * v2.2版本修改：修改信息入口改为点击聊天页面用户名，避免与其他模块冲突[WxRecord](https://github.com/pwh-pwh/wxrecordread/releases/tag/v2.2)
 * 暂时提高版本号范围以支持一些不容易改变的类
+* 最新版下载[WxRecord](https://github.com/pwh-pwh/wxrecordread/releases/tag/v3.3)
 * 版本支持请查看[点击](https://github.com/pwh-pwh/wxrecordread/releases)看说明
 * 仅测试lsposed完美运行，其他xposed框架请自行测试
 
@@ -32,7 +33,7 @@
 ## 截图
 
 ![image](https://pic.rmb.bdstatic.com/bjh/82ea7a148cf2c578346f0999929840bc.jpeg)
-![img.png](https://x.imgs.ovh/x/2023/08/27/64ead51897b63.jpg)
+![pPO3BJf.jpg](https://z1.ax1x.com/2023/10/03/pPO3BJf.jpg)
 ![pP79OIO.md.jpg](https://z1.ax1x.com/2023/09/24/pP79OIO.md.jpg)]
 ![pPO3UeA.jpg](https://z1.ax1x.com/2023/10/03/pPO3UeA.jpg)]
 
