@@ -294,6 +294,7 @@ class HookEntry : IYukiHookXposedInit {
                     var jsonObj = gson.toJsonTree(data).asJsonObject
                     jsonObj.apply {
                         var v = get("n").asString
+                        LuckyMoneyHold.sender = get("Q").asString
                         if(LuckyMoneyHold.v.isEmpty() || !LuckyMoneyHold.v.equals(v)) {
                             LuckyMoneyHold.v = v
                             val asJsonArray = get("M").asJsonArray
@@ -328,9 +329,10 @@ class HookEntry : IYukiHookXposedInit {
                                 }
                                 .setPositiveButton("复制") {
                                         _,_ ->
-                                    val joinToString =
+                                    var joinToString =
                                         LuckyMoneyHold.luckyList.map { "${it.nickName}领取${it.money / 100.0}元,wxid:${it.wxid}" }
                                             .joinToString("\n")
+                                    joinToString = "发送者:${LuckyMoneyHold.sender}\n" + joinToString
                                     val clipboardManager =
                                         appContext!!.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                                     clipboardManager.setPrimaryClip(
@@ -461,6 +463,7 @@ fun getApplicationVersionName(packageName: String): String {
 }
 
 object LuckyMoneyHold {
+    var sender: String = ""
     var v:String = ""
     var luckyList:MutableList<LuckyItem> = mutableListOf()
 }
