@@ -16,6 +16,8 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import com.alibaba.fastjson.JSON
+import com.coderpwh.pojo.ChangeMsgEt
+import com.coderpwh.pojo.LuckHookEt
 import com.coderpwh.pojo.RecordHookEt
 import com.coderpwh.pojo.UserInfo
 import com.coderpwh.utils.factory.showDialog
@@ -31,6 +33,7 @@ import com.highcapable.yukihookapi.hook.param.PackageParam
 import com.highcapable.yukihookapi.hook.type.java.StringType
 import com.highcapable.yukihookapi.hook.type.java.UnitType
 import com.highcapable.yukihookapi.hook.xposed.proxy.IYukiHookXposedInit
+import de.robv.android.xposed.XposedHelpers
 import de.robv.android.xposed.XposedHelpers.callMethod
 import de.robv.android.xposed.XposedHelpers.callStaticMethod
 import de.robv.android.xposed.XposedHelpers.findClass
@@ -40,8 +43,9 @@ import java.io.InputStream
 @InjectYukiHookWithXposed(entryClassName = "HookEntryInit", modulePackageName = "com.coderpwh")
 class HookEntry : IYukiHookXposedInit {
 
+
     override fun onInit() = configs {
-        isDebug = false
+        isDebug = true
         isAllowPrintingLogs = true
     }
 
@@ -56,6 +60,8 @@ class HookEntry : IYukiHookXposedInit {
         }
         val ht by lazy {
             when(wxVersionName) {
+                "8.0.7" ->
+                    RecordHookEt("lpz","SyI","SyG","Szn","SAb","a")
                 "8.0.23"->
                     RecordHookEt("pUJ","agVN","agVL","agWs","agXg","a")
                 "8.0.25" ->
@@ -65,11 +71,34 @@ class HookEntry : IYukiHookXposedInit {
                 else -> null
             }
         }
+
+        val lt by lazy {
+            when(wxVersionName) {
+                "8.0.40"->
+                    LuckHookEt("W7","z","u","n","Q","M","j","d","n","f")
+                "8.0.7"->
+                    LuckHookEt("a","Ezl","Ezg","ybP","Ezw","Ezu","DLp","EAG","userName","EAr")
+                else -> LuckHookEt("W7","z","u","n","Q","M","j","d","n","f")
+            }
+        }
+
+        val cmt by lazy {
+            when(wxVersionName) {
+                "8.0.40" ->
+                    ChangeMsgEt(0x7f094fb5,"d")
+                "8.0.42" ->
+                    ChangeMsgEt(0x7f0952c4,"b")
+                else -> ChangeMsgEt(0x7f094fb5,"d")
+            }
+        }
+
+        const val WXCONFIGPATH = "/storage/emulated/0/Android/data/com.tencent.mm/files"
+
         val pr by lazy {
-            var f = File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/wx/wxmsg.properties")
+            var f = File(WXCONFIGPATH+"/wx/wxmsg.properties")
             var p = mutableMapOf<String,String>()
             if (!f.exists()) {
-                var dir = File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/wx")
+                var dir = File(WXCONFIGPATH+"/wx")
                 if (!dir.exists()) {
                     dir.mkdir()
                 }
@@ -204,7 +233,7 @@ class HookEntry : IYukiHookXposedInit {
                     afterHook {
                         instance<View>().apply {
 //                            loggerD("wxbtnHook","btn id ${id}")
-                            if (this.id==0x7f094fb5) {
+                            if (this.id== cmt.viewId) {
                                 loggerD("wxbtnHook","success find btn")
                                 setOnClickListener {
                                     Toast.makeText(this.context,"修改消息",Toast.LENGTH_LONG).show()
@@ -226,7 +255,7 @@ class HookEntry : IYukiHookXposedInit {
             .hook {
                 injectMember {
                     method {
-                        name = "d"
+                        name = cmt.methodName
                         returnType = UnitType
                     }
                     beforeHook {
@@ -256,7 +285,7 @@ class HookEntry : IYukiHookXposedInit {
         return ja.map {
                 je ->
             je.asJsonObject.let {
-                LuckyItem(it.get("d").asString,it.get("n").asString,it.get("f").asLong)
+                LuckyItem(it.get(lt.nickName).asString,it.get(lt.wxid).asString,it.get(lt.money).asLong)
             }
         }.toList()
     }
@@ -265,17 +294,25 @@ class HookEntry : IYukiHookXposedInit {
         findClass("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyDetailUI").hook {
             injectMember {
                 method {
-                    name = "W7"
+                    name = lt.methodName
                     paramCount = 1
+                    if(lt.methodName=="a") {
+                        param("com.tencent.mm.plugin.luckymoney.model.q".clazz)
+                    }
                 }
+                //com.tencent.mm.plugin.luckymoney.model.q
                 beforeHook {
+                    val data = args(0).any()
+                    val gson = Gson()
+                    val toJson = gson.toJson(data)
+                    loggerI(msg = "toJson:$toJson")
                     args(0).any()!!.current {
                         val mMsg = field {
-                            name = "z"
+                            name = lt.moneyDesc
                         }.string()
                         loggerI(msg = "z:$mMsg")
                         val totalM = field {
-                            name = "u"
+                            name = lt.totalMoney
                         }.long()
                         loggerI(msg = "totalM:$totalM")
                         val resultMsg = if (mMsg.contains("共"))  {
@@ -284,23 +321,20 @@ class HookEntry : IYukiHookXposedInit {
                             "共${(totalM/100.0)}元,${mMsg}"
                         }
                         field {
-                            name = "z"
+                            name = lt.moneyDesc
                         }.set(resultMsg)
                     }
-                    val data = args(0).any()
-                    val gson = Gson()
-                    val toJson = gson.toJson(data)
-                    loggerI(msg = "toJson:$toJson")
+
                     var jsonObj = gson.toJsonTree(data).asJsonObject
                     jsonObj.apply {
-                        var v = get("n").asString
-                        LuckyMoneyHold.sender = get("Q").asString
+                        var v = get(lt.versionName).asString
+                        LuckyMoneyHold.sender = get(lt.sender).asString
                         if(LuckyMoneyHold.v.isEmpty() || !LuckyMoneyHold.v.equals(v)) {
                             LuckyMoneyHold.v = v
-                            val asJsonArray = get("M").asJsonArray
+                            val asJsonArray = get(lt.moneyArr).asJsonArray
                             LuckyMoneyHold.luckyList = parseJsonArrayToLList(asJsonArray).toMutableList()
                         } else {
-                            val asJsonArray = get("M").asJsonArray
+                            val asJsonArray = get(lt.moneyArr).asJsonArray
                             parseJsonArrayToLList(asJsonArray).forEach {
                                 if (!LuckyMoneyHold.luckyList.contains(it)) {
                                     LuckyMoneyHold.luckyList.add(it)
@@ -309,8 +343,9 @@ class HookEntry : IYukiHookXposedInit {
                         }
                     }
                     instance.current {
+                        //Eut
                         val ge3View = field {
-                            name = "j"
+                            name = lt.tView
                         }.cast<TextView>()
                         ge3View!!.setOnClickListener {
                             AlertDialog.Builder(it.context).setTitle("领取详情")
@@ -377,17 +412,23 @@ class HookEntry : IYukiHookXposedInit {
                             loggerD("wxhook", "before hook")
                             loggerD("wxhook","wechat version:${wxVersion}")
                             loggerD("wxhook","wechat version:${wxVersionName}")
+
+                            var a1 = args(0)
+                            var gson = Gson()
+                            var readText = gson.toJson(a1.any())
+                            loggerD("wxhook", readText)
                             if (ht==null) {
                                 loggerD("wxhook","当前版本尚未支持")
+                                var clipboardManager =
+                                    appContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                clipboardManager.setPrimaryClip(
+                                    ClipData.newPlainText("wx_id_list", readText)
+                                )
                                 instance<Activity>().apply {
                                     Toast.makeText(this.baseContext,"当前版本尚未支持",Toast.LENGTH_LONG).show()
                                 }
                                 return@beforeHook
                             }
-                            var a1 = args(0)
-                            var gson = Gson()
-                            var readText = gson.toJson(a1.any())
-                            loggerD("wxhook", readText)
                             var jsonArray = JSON.parseObject(readText)
                                 .getJSONArray(ht!!.st)
                             var userInfos = mutableListOf<UserInfo>()
@@ -482,14 +523,14 @@ fun MutableMap<String,String>.load(ins:InputStream) {
 
 fun MutableMap<String,String>.load() {
     load(
-        File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/wx/wxmsg.properties")
+        File(HookEntry.WXCONFIGPATH+"/wx/wxmsg.properties")
             .inputStream()
     )
 }
 
 
 fun MutableMap<String,String>.save() {
-    var f = File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/wx/wxmsg.properties")
+    var f = File(HookEntry.WXCONFIGPATH+"/wx/wxmsg.properties")
     var sb = StringBuffer()
     forEach{
         sb.append(it.key)
